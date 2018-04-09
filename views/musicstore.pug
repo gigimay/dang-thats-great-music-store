@@ -1,0 +1,12 @@
+extends layout
+
+include mixins/storecard
+
+block content
+  .inner
+    h2= title
+    .musicstores
+      each music in stores
+        +storeCard(music)
+      
+  
