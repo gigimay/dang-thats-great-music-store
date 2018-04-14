@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
 mongoose.Proomise = global.Promise;
 const slug = require('slugs');//the slugs is gonna allow us make url friendly names for our slugs
+
 const storeSchema = new mongoose.Schema({
   name: {
     type: String,
     trim: true,
-    required: 'please a store name!'
+    required: 'please supply a store name!'
   },
   slug: String,
-  discription: {
+  description: {
     type: String,
     trim: true
   },
@@ -18,12 +19,20 @@ const storeSchema = new mongoose.Schema({
     default: Date.now
   },
   photo: String,
+  video: String,
   author: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: 'You must supply an author'
   }
 });
+
+// defining the indexes
+storeSchema.index({
+  name: 'text',
+  discription: 'text'
+});
+
 
 storeSchema.pre('save', async function(next){
   if(!this.isModified('name')){
@@ -47,4 +56,21 @@ storeSchema.statics.getTagList = function() {
     { $sort: { count: -1 } }
   ]);
 }
+
+//find reviews where the stores _id property === reviews store property
+storeSchema.virtual('reviews', {
+  ref: 'Review',  //what model to link?
+  localField: '_id', // which field on the store?
+  foreignField: 'store' // which field on the review?
+})
+
+// populating reviews in each and every musicStore
+function autopopulate(next) {
+  this.populate('reviews')
+  next();
+}
+
+storeSchema.pre('find', autopopulate);
+storeSchema.pre('findOne', autopopulate);
+
 module.exports = mongoose.model('Store', storeSchema);

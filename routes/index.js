@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const storeController = require('../controllers/storeController');
 const userController = require('../controllers/userController');
-const { catchErrors } = require('../handlers/errorHandlers');
+const reviewController = require('../controllers/reviewController');
 const authController = require('../controllers/authController');
+const { catchErrors } = require('../handlers/errorHandlers');
 
 router.get('/', catchErrors(storeController.musicStore));
 router.get('/stores', catchErrors(storeController.musicStore));
+router.get('/stores/page/:page', catchErrors(storeController.musicStore));
 router.get('/add', authController.isLoggedIn, storeController.addMusic);
 router.post('/add',
  storeController.upload,
@@ -43,6 +45,17 @@ router.post('/account/reset/:token',
   authController.confirmedPasswords,
   catchErrors(authController.update)
 );
+
+router.post('/reviews/:id',
+authController.isLoggedIn,
+catchErrors(reviewController.addReview)
+);
+
+/*
+  API
+*/
+
+router.get('/api/search', catchErrors(storeController.searchStores));
 
 
 

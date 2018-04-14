@@ -50,9 +50,26 @@ exports.createMusic = async (req, res) =>{
 };
 
 exports.musicStore = async (req, res) => {
+  const page = req.params.page || 1;
+  const limit = 4;
+  const skip = (page * limit) - limit;
   //query the database for a list of all music storeSchema before u show them allow
-  const stores = await Store.find()
-  res.render('musicstore', {title: 'music store', stores})
+  const storesPromise =  Store
+  .find()
+  .skip(skip)
+  .limit(limit)
+  .sort({ created: 'desc' });
+
+  const countPromise = Store.count();
+  const [stores, count] = await Promise.all([storesPromise, countPromise]);
+  const pages = Math.ceil(count / limit);
+  if (!stores.length && skip) {
+    req.flash('info', `Hello! You have asked for page ${page}. You are out of music so better to enjoy with the previous ones ${pages} 😼 ` );
+    res.redirect(`/stores/page/${pages}`)
+    return;
+  }
+
+  res.render('musicstore', {title: 'music store', page, pages, count, stores})
 };
 
 const confirmOwner = (store, user) => {
@@ -76,7 +93,7 @@ exports.updateMusicStore = async (req, res) =>{
 }
 
 exports.getStoreBySlug = async (req, res) =>{
-  const store = await Store.findOne({ slug: req.params.slug }).populate('author');
+  const store = await Store.findOne({ slug: req.params.slug }).populate('author reviews');
   if(!store){
     return next();
   }
@@ -89,5 +106,27 @@ exports.getStoresByTag = async (req, res) =>{
   const tagsPromise = Store.getTagList();
   const storesPromise = Store.find({ tags: tagQuery});
   const [tags, stores] = await Promise.all([tagsPromise, storesPromise]);
+
   res.render('tag', { tags, title: 'Tags', tag, stores })
 }
+
+exports.searchStores = async (req, res) => {
+  const stores = await Store
+  //find stores that match the search
+  .find({
+    $text: {
+      $search: req.query.q //q stands for query
+    }
+  }, {
+    score: {
+      $meta: 'textScore'
+    }
+  })
+  // sort them by date added
+  .sort({
+    score: { $meta: 'textScore' }
+  })
+  // limit the search in five numbers
+  .limit(5)
+    res.json(stores);
+};

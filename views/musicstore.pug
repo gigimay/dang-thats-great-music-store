@@ -1,6 +1,7 @@
 extends layout
 
 include mixins/storecard
+include mixins/paginationForm
 
 block content
   .inner
@@ -8,5 +9,6 @@ block content
     .musicstores
       each music in stores
         +storeCard(music)
+    +paginationForm(page, pages, count)
       
   
