@@ -11,7 +11,7 @@ block content
         a(href=`/stores/${store.slug}`) #{store.name}
         
   .single__details.double
-    p= store.discription
+    p= store.description
     if store.tags
       ul.tags
         each tag in store.tags

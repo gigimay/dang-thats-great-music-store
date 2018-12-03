@@ -77,6 +77,7 @@ const confirmOwner = (store, user) => {
     throw Error('You must own a store in order to edit it!');
   }
 }
+
 exports.editMusic = async (req, res) =>{
   const store = await Store.findOne({_id: req.params.id})
   confirmOwner(store, req.user);
